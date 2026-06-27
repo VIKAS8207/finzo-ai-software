@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+  /* --- Colors --- */
+  --color-finzo-primary: #1746EA;
+  --color-finzo-secondary: #4675FF;
+  --color-finzo-third: #02219E;
+  --color-finzo-fourth: #010C28;
+  --color-finzo-white: #FFFFFF;
+
+  /* --- Fonts --- */
+  --font-spline-sans: "Spline Sans", sans-serif;
+
+  /* --- Global Border Radius Override --- */
+  /* This forces the standard 'rounded' class to be exactly 10px */
+  --radius: 10px;
+
+  /* --- Animations --- */
+  --animate-steam: steam 20s linear infinite;
+  
+  @keyframes steam {
+    0% { background-position: 0 0; }
+    50% { background-position: 400% 0; }
+    100% { background-position: 0 0; }
+  }
+}
+
+@layer base {
+  body {
+    background-color: var(--color-finzo-fourth);
+    color: var(--color-finzo-white);
+  }
+}
