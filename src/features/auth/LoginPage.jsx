@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom'; // <-- ADDED THIS IMPORT
+import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 
@@ -9,12 +9,17 @@ export default function LoginPage() {
   
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // --- NEW: STATE FOR OUR CREDENTIALS ---
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
   
   const container = useRef();
   const showcaseImage = useRef();
   const formRef = useRef();
 
-  const navigate = useNavigate(); // <-- Hook initialized correctly
+  const navigate = useNavigate();
 
   useEffect(() => {
     let interval;
@@ -41,7 +46,31 @@ export default function LoginPage() {
     setCurrentView(view);
     setShowPassword(false);
     setShowConfirmPassword(false);
+    setLoginError(''); // Clear errors when switching views
     if (view === 'otp') setOtpTimer(30);
+  };
+
+  // --- NEW: THE MAGIC DEMO ROUTING LOGIC ---
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    setLoginError('');
+
+    if (email === 'admin' && password === 'admin123') {
+      // SCENE A: NEW USER FLOW
+      // Remove the key so the RouteGuard forces them to Onboarding
+      localStorage.removeItem('finzo_setup_complete');
+      navigate('/loading');
+      
+    } else if (email === 'Admin@' && password === 'Admin@123') {
+      // SCENE B: RETURNING USER FLOW
+      // Inject the key so the RouteGuard lets them straight into the Dashboard
+      localStorage.setItem('finzo_setup_complete', 'true');
+      navigate('/loading');
+      
+    } else {
+      // Show an error for anything else to make the prototype feel real
+      setLoginError('Invalid credentials. Please try again.');
+    }
   };
 
   const EyeIcon = ({ isVisible }) => (
@@ -99,11 +128,26 @@ export default function LoginPage() {
                 <div className="h-px bg-finzo-white/20 flex-1"></div>
               </div>
 
-              {/* --> ADDED NAVIGATE TO ONSUBMIT HERE <-- */}
-              <form className="space-y-4" autoComplete="off" onSubmit={(e) => { e.preventDefault(); navigate('/loading'); }}>
+              {/* --> ATTACHED THE SUBMIT HANDLER HERE <-- */}
+              <form className="space-y-4" autoComplete="off" onSubmit={handleLoginSubmit}>
+                
+                {/* Simulated Error Message */}
+                {loginError && (
+                  <div className="anim-element bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded text-xs text-center font-medium">
+                    {loginError}
+                  </div>
+                )}
+
                 <div className="anim-element">
                   <label className="block text-xs text-finzo-white/80 mb-1">Email Address</label>
-                  <input type="email" autoComplete="off" placeholder="name@company.com" className="w-full bg-transparent border border-finzo-white/20 rounded px-4 py-3 text-sm focus:outline-none focus:border-finzo-secondary transition-colors" />
+                  <input 
+                    type="text" 
+                    autoComplete="off" 
+                    placeholder="admin or Admin@" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-transparent border border-finzo-white/20 rounded px-4 py-3 text-sm focus:outline-none focus:border-finzo-secondary transition-colors" 
+                  />
                 </div>
                 
                 <div className="anim-element">
@@ -113,6 +157,8 @@ export default function LoginPage() {
                       type={showPassword ? "text" : "password"} 
                       autoComplete="new-password" 
                       placeholder="••••••••" 
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       className="w-full bg-transparent border border-finzo-white/20 rounded px-4 py-3 pr-10 text-sm focus:outline-none focus:border-finzo-secondary transition-colors" 
                     />
                     <button 
@@ -146,6 +192,7 @@ export default function LoginPage() {
             </>
           )}
 
+          {/* ... Keep the Register, Forgot, and OTP views exactly the same as your original code below this line ... */}
           {currentView === 'register' && (
             <>
               <div className="anim-element mb-8">
