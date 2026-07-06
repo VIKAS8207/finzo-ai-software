@@ -1,54 +1,74 @@
 import { useState, useEffect } from 'react';
 import { Sparkles } from 'lucide-react';
 
-export default function OnboardingLeftPanel() {
-  // --- TYPEWRITER STATE MACHINE ---
-  const sequence = [
-    { type: 'h1', text: "Transform your financial workflows with AI intelligence." },
-    { type: 'p-main', text: "Set up your organization's workspace in minutes. Streamline portfolio management, automate compliance, and unlock real-time data insights tailored for modern finance teams." },
-    { type: 'p-sys', text: "> Establishing secure terminal connection..." },
-    { type: 'p-sys', text: "> Initializing portfolio analytics engine..." },
-    { type: 'p-sys', text: "> Syncing with global financial grids..." },
-    { type: 'p-sys', text: "> Workspace environment ready for configuration." }
-  ];
+const contentSets = [
+  {
+    heading: "Transform your financial workflows with AI intelligence.",
+    para: "Set up your organization's workspace in minutes. Streamline portfolio management, automate compliance, and unlock real-time data insights tailored for modern finance teams."
+  },
+  {
+    heading: "Automate reconciliation with zero human error.",
+    para: "Our AI engine matches thousands of ledger entries instantly. Detect anomalies, flag duplicate invoices, and maintain perfect audit trails without breaking a single sweat."
+  },
+  {
+    heading: "Real-time analytics for decisive financial moves.",
+    para: "Stop waiting for month-end reports. Get dynamic cash flow forecasting, vendor spend analysis, and actionable insights delivered straight to your live dashboard."
+  }
+];
 
-  const [visibleLines, setVisibleLines] = useState([{ ...sequence[0], currentText: '' }]);
-  const [lineIndex, setLineIndex] = useState(0);
-  const [charIndex, setCharIndex] = useState(0);
+export default function OnboardingLeftPanel() {
+  // State Machine for the Typewriter Loop
+  const [currentSetIndex, setCurrentSetIndex] = useState(0);
+  const [headingText, setHeadingText] = useState('');
+  const [paraText, setParaText] = useState('');
+  
+  // Phases: 'typing-heading' -> 'typing-para' -> 'pausing' -> 'fading-out'
+  const [phase, setPhase] = useState('typing-heading'); 
 
   useEffect(() => {
-    if (lineIndex < sequence.length) {
-      const targetText = sequence[lineIndex].text;
+    let timeout;
+    const currentSet = contentSets[currentSetIndex];
 
-      if (charIndex < targetText.length) {
-        // Typing out characters
-        const timeout = setTimeout(() => {
-          setVisibleLines(prev => {
-            const newLines = [...prev];
-            newLines[lineIndex].currentText = targetText.substring(0, charIndex + 1);
-            return newLines;
-          });
-          setCharIndex(c => c + 1);
-        }, 20); // Speed of typing (lower = faster)
-        
-        return () => clearTimeout(timeout);
+    if (phase === 'typing-heading') {
+      if (headingText.length < currentSet.heading.length) {
+        timeout = setTimeout(() => {
+          setHeadingText(currentSet.heading.substring(0, headingText.length + 1));
+        }, 30); // Typing speed for heading
       } else {
-        // Line complete, pause before starting the next line
-        const timeout = setTimeout(() => {
-          if (lineIndex + 1 < sequence.length) {
-            setLineIndex(l => l + 1);
-            setCharIndex(0);
-            setVisibleLines(prev => [...prev, { ...sequence[lineIndex + 1], currentText: '' }]);
-          }
-        }, 600); // Pause interval between paragraphs
-        
-        return () => clearTimeout(timeout);
+        timeout = setTimeout(() => setPhase('typing-para'), 300); // Pause before paragraph starts
       }
+    } 
+    else if (phase === 'typing-para') {
+      if (paraText.length < currentSet.para.length) {
+        timeout = setTimeout(() => {
+          setParaText(currentSet.para.substring(0, paraText.length + 1));
+        }, 15); // Typing speed for paragraph (slightly faster)
+      } else {
+        setPhase('pausing');
+      }
+    } 
+    else if (phase === 'pausing') {
+      // Keep the text on screen for 4 seconds so the user can read it
+      timeout = setTimeout(() => {
+        setPhase('fading-out');
+      }, 4000); 
+    } 
+    else if (phase === 'fading-out') {
+      // Allow 500ms for CSS fade out, then reset everything for the next text set
+      timeout = setTimeout(() => {
+        setHeadingText('');
+        setParaText('');
+        setCurrentSetIndex((prev) => (prev + 1) % contentSets.length);
+        setPhase('typing-heading');
+      }, 500); 
     }
-  }, [lineIndex, charIndex]);
+
+    return () => clearTimeout(timeout);
+  }, [headingText, paraText, phase, currentSetIndex]);
 
   return (
-    <div className="hidden lg:flex lg:w-5/12 p-12 flex-col relative text-finzo-white overflow-hidden shadow-[10px_0_30px_rgba(0,0,0,0.5)] z-20">
+    // CHANGE: Uses h-full. Since the parent is now h-screen, this panel perfectly locks to the screen size.
+    <div className="hidden lg:flex lg:w-5/12 h-full p-12 flex-col relative text-finzo-white overflow-hidden shadow-[10px_0_30px_rgba(0,0,0,0.5)] z-20">
       
       {/* ========================================= */}
       {/* GLITTERY AI BACKGROUND & GRADIENTS          */}
@@ -65,56 +85,39 @@ export default function OnboardingLeftPanel() {
       {/* ========================================= */}
       {/* TOP: Logo                                 */}
       {/* ========================================= */}
-      <div className="z-10">
+      <div className="z-10 shrink-0">
         <img src="/images/finzowhite.png" alt="Finzo Logo" className="h-6 object-contain" />
       </div>
 
-      {/* Spacer to push content to the bottom */}
+      {/* CHANGE: Spacer to push everything below it down towards the bottom */}
       <div className="flex-1"></div>
 
       {/* ========================================= */}
-      {/* MIDDLE: Typewriter Content                */}
+      {/* MIDDLE: Typewriter Content Loop           */}
       {/* ========================================= */}
-      <div className="z-10 pr-8 mb-8 flex flex-col gap-4 min-h-[350px] justify-end">
-        {visibleLines.map((line, idx) => {
-          const isLastLine = idx === visibleLines.length - 1;
-          const isTypingComplete = lineIndex === sequence.length - 1 && charIndex >= sequence[sequence.length - 1].text.length;
-
-          if (line.type === 'h1') {
-            return (
-              <h1 key={idx} className="text-3xl xl:text-4xl font-bold mb-2 leading-tight tracking-tight min-h-[80px]">
-                {line.currentText}
-                {isLastLine && !isTypingComplete && <span className="animate-pulse text-finzo-white/70">...</span>}
-              </h1>
-            );
-          }
+      <div className="z-10 pr-8 flex flex-col justify-end mb-8 min-h-[200px]">
+        
+        {/* CSS Fade Transition Wrapper */}
+        <div className={`transition-opacity duration-500 ${phase === 'fading-out' ? 'opacity-0' : 'opacity-100'}`}>
           
-          if (line.type === 'p-main') {
-            return (
-              <p key={idx} className="text-finzo-white/80 leading-relaxed text-base xl:text-lg mb-4">
-                {line.currentText}
-                {isLastLine && !isTypingComplete && <span className="animate-pulse text-finzo-white/70">...</span>}
-              </p>
-            );
-          }
+          <h1 className="text-3xl xl:text-4xl font-bold mb-4 leading-tight tracking-tight min-h-[80px]">
+            {headingText}
+            {phase === 'typing-heading' && <span className="animate-pulse text-finzo-white/70 ml-1">_</span>}
+          </h1>
+          
+          <p className="text-finzo-white/80 leading-relaxed text-base xl:text-lg min-h-[100px]">
+            {paraText}
+            {phase === 'typing-para' && <span className="animate-pulse text-finzo-white/70 ml-1">_</span>}
+            {phase === 'pausing' && <span className="animate-pulse text-finzo-white ml-2">...</span>}
+          </p>
 
-          if (line.type === 'p-sys') {
-            return (
-              <p key={idx} className="text-[#a855f7] font-mono text-xs xl:text-sm tracking-wide opacity-80">
-                {line.currentText}
-                {isLastLine && <span className="animate-pulse text-finzo-white ml-1">_</span>}
-              </p>
-            );
-          }
-
-          return null;
-        })}
+        </div>
       </div>
 
       {/* ========================================= */}
       {/* BOTTOM: Finzo AI Profile Snippet          */}
       {/* ========================================= */}
-      <div className="z-10 flex items-center gap-4 border-t border-finzo-white/10 pt-6">
+      <div className="z-10 shrink-0 flex items-center gap-4 border-t border-finzo-white/10 pt-6">
         <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-finzo-primary to-[#a855f7] flex items-center justify-center overflow-hidden border-2 border-finzo-white/20 shrink-0 shadow-[0_0_15px_rgba(168,85,247,0.4)]">
           <Sparkles className="text-finzo-white" size={20} />
         </div>

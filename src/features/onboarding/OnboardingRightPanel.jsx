@@ -4,7 +4,7 @@ import { ChevronRight, Search, CheckCircle2 } from 'lucide-react';
 
 import MinimalInput from '../../components/ui/MinimalInput';
 import MinimalSelect from '../../components/ui/MinimalSelect';
-import Button from '../../components/ui/Button'; // <-- New Button Import
+import Button from '../../components/ui/Button'; 
 import PaymentStep from './PaymentStep';
 
 export default function OnboardingRightPanel() {
@@ -72,12 +72,15 @@ export default function OnboardingRightPanel() {
   };
 
   return (
-    <div className="w-full lg:w-7/12 relative flex flex-col justify-center p-6 sm:p-16 lg:p-24 overflow-y-auto bg-[#050505] custom-scrollbar">
+    // FIX: Changed from 'justify-center p-24' to 'h-full flex flex-col px-24'. 
+    // This allows the container to span full height and handle scrolling properly.
+    <div className="w-full lg:w-7/12 h-full relative flex flex-col px-6 sm:px-16 lg:px-24 overflow-y-auto bg-[#050505] custom-scrollbar">
       
       {/* Background Ambient Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-finzo-primary/5 blur-[150px] rounded-full pointer-events-none z-0"></div>
 
-      <div className="w-full max-w-lg relative z-10 flex flex-col mx-auto">
+      {/* FIX: Added 'my-auto py-12'. my-auto handles the perfect vertical centering without breaking the scroll! */}
+      <div className="w-full max-w-lg relative z-10 flex flex-col mx-auto my-auto py-12 lg:py-24">
         
         {/* --- Minimalist Text Navigation --- */}
         <div className="w-full mb-12 animate-in fade-in slide-in-from-top-4 duration-700 border-b border-finzo-white/10 pb-4">
@@ -171,6 +174,10 @@ export default function OnboardingRightPanel() {
                 {showCompanyDetails && (
                   <div className="animate-in fade-in slide-in-from-top-4 duration-500 space-y-8">
                     <div className="p-4 bg-finzo-white/5 border border-finzo-white/10 rounded-[10px] space-y-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle2 size={14} className="text-green-400" />
+                        <span className="text-xs text-green-400 font-bold tracking-widest uppercase">Registry Data</span>
+                      </div>
                       <div className="grid grid-cols-2 gap-4">
                         <MinimalInput label="Legal Name" value={formData.legalName} onChange={(e) => setFormData({ ...formData, legalName: e.target.value })} className="text-sm py-1" />
                         <MinimalInput label="PAN" value={formData.pan} onChange={(e) => setFormData({ ...formData, pan: e.target.value })} className="uppercase text-sm py-1" />
